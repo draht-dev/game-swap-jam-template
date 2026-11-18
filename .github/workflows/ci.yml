@@ -23,8 +23,3 @@ jobs:
         run: bash scripts/build-web.sh
       - name: Gate-Check dist/
         run: bash scripts/gate-check.sh
-      - name: dist/ als Artefakt
-        uses: actions/upload-artifact@v7
-        with:
-          name: dist
-          path: dist/
