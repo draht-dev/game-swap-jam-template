@@ -1,0 +1,9 @@
+[package]
+name = "game-swap-jam-template"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+publish = false
+
+[dependencies]
+macroquad = "0.4"
