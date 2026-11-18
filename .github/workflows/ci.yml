@@ -1,14 +1,15 @@
-name: ci
+name: gate
 
 on:
   push:
   pull_request:
 
 jobs:
-  test-and-wasm:
+  gate:
+    name: gate (test + wasm + static site)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
@@ -16,7 +17,14 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y pkg-config libx11-dev libxi-dev libgl1-mesa-dev libasound2-dev
-      - name: cargo test
+      - name: cargo test (Spiellogik nativ)
         run: cargo test
-      - name: wasm build
+      - name: wasm build (statische Seite nach dist/)
         run: bash scripts/build-web.sh
+      - name: Gate-Check dist/
+        run: bash scripts/gate-check.sh
+      - name: dist/ als Artefakt
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
