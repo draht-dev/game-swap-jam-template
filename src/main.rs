@@ -1,6 +1,8 @@
 mod game;
+mod sfx;
 
 use game::{Input, State, WORLD_HEIGHT, WORLD_WIDTH};
+use macroquad::audio::{load_sound_from_bytes, play_sound_once};
 use macroquad::prelude::*;
 
 fn window_conf() -> Conf {
@@ -36,9 +38,17 @@ fn to_screen(ox: f32, oy: f32, scale: f32, r: game::Rect) -> (f32, f32, f32, f32
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut state = State::new();
+    // Ton beim Einsammeln. Im Browser erst nach der ersten Eingabe hörbar (Autoplay-Regel).
+    let pickup = load_sound_from_bytes(&sfx::beep_wav(880.0, 0.12, 0.3)).await.ok();
 
     loop {
+        let score_before = state.score;
         state.update(read_input(), get_frame_time());
+        if state.score > score_before {
+            if let Some(sound) = &pickup {
+                play_sound_once(sound);
+            }
+        }
 
         clear_background(Color::from_rgba(10, 10, 14, 255));
         let (ox, oy, scale) = letterbox();

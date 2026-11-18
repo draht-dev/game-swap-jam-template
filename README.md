@@ -9,6 +9,12 @@ Ein minimales Beispielspiel: ein Rechteck bewegt sich mit Pfeiltasten oder WASD 
 - Rust über rustup, Target `wasm32-unknown-unknown`
 - Linux (nativer Build): `pkg-config`, `libx11-dev`, `libxi-dev`, `libgl1-mesa-dev`, `libasound2-dev`
 
+## Ton
+
+macroquad läuft mit dem Feature `audio`. `src/sfx.rs` erzeugt kurze Soundeffekte als WAV-Bytes im Code (keine Asset-Dateien), `src/main.rs` spielt beim Einsammeln einen Ton. Im Browser ist Ton erst nach der ersten Eingabe hörbar (Autoplay-Regel der Browser).
+
+`.cargo/config.toml` setzt für `wasm32-unknown-unknown` das Linker-Flag `--allow-undefined`, weil quad-snd 0.2.8 seine JS-Importe sonst ab Rust 1.96 nicht mehr linkt (Quelle: https://blog.rust-lang.org/2026/04/04/changes-to-webassembly-targets-and-handling-undefined-symbols/).
+
 ## Build und Tests
 
 ```sh
