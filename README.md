@@ -36,4 +36,14 @@ Die Datei `web/mq_js_bundle.js` ist vendort, passend zu macroquad 0.4.16 und der
 - Herkunft laut `js/README.md` der Crate: Bundling aus miniquad `js/gl.js`, quad-snd `js/audio.js`, sapp-jsutils und quad-net, danach minifiziert
 - Lizenz der Datei und der Crate: MIT OR Apache-2.0
 
-Es gibt keinen Pages-Deploy in diesem Stand.
+## CI und Pages
+
+- `.github/workflows/ci.yml` (Workflow `gate`): `cargo test`, WASM-Build nach `dist/`, `scripts/gate-check.sh`. Läuft bei jedem Push und PR.
+- `.github/workflows/pages.yml` (Workflow `pages`): baut wie das Gate und deployt `dist/` auf GitHub Pages. Im Template nur manuell (`workflow_dispatch`); Pages muss im eigenen public Repo unter Settings > Pages > Source "GitHub Actions" eingeschaltet sein.
+
+## Dokumente
+
+- `AGENTS.md`: Aufbau, Befehle und Regeln für Coding-Agents
+- `HANDOFF.md`: Übergabe-Vorlage für den Swap
+- `SWAP.md`: Swap-Checkliste (Tags `handoff` und `final`, Branch `swap`)
+- `CREDITS.md`: Mitwirkende mit Name und Link
