@@ -10,6 +10,7 @@ Hinweise für Coding-Agents (und Menschen), die in diesem Repo arbeiten.
 - `web/index.html`, `web/mq_js_bundle.js`: Web-Hülle. `mq_js_bundle.js` ist vendort (Version und Quelle im README), nicht von Hand ändern.
 - `scripts/build-web.sh`: baut WASM und füllt `dist/`.
 - `scripts/gate-check.sh`: prüft `dist/` (Gate).
+- `scripts/headless-check.sh`: lädt `dist/` in headless Chrome, rot bei ungefangenem JS-Fehler.
 - `.github/workflows/ci.yml`: Gate-CI bei jedem Push und PR.
 - `.github/workflows/pages.yml`: Pages-Deploy, im Template nur manuell.
 - `HANDOFF.md`: Übergabe an das nächste Team. `SWAP.md`: Ablauf beim Swap.
@@ -22,12 +23,13 @@ cargo test                      # Spiellogik nativ testen
 cargo run                       # nativ spielen
 ./scripts/build-web.sh          # WASM-Build nach dist/
 ./scripts/gate-check.sh         # Gate lokal prüfen (nach build-web.sh)
+./scripts/headless-check.sh     # Headless-Gate (braucht Chrome/Chromium, python3)
 python3 -m http.server --directory dist 8080
 ```
 
 ## Regeln
 
-1. Vor jedem Push: `cargo test` und `./scripts/build-web.sh && ./scripts/gate-check.sh` grün.
+1. Vor jedem Push: `cargo test` und `./scripts/build-web.sh && ./scripts/gate-check.sh && ./scripts/headless-check.sh` grün.
 2. Logik in `game.rs`, nicht in `main.rs`. Jede neue Regel bekommt mindestens einen Test.
 3. Kein Zugriff auf Dateisystem, Netzwerk oder Threads im Spielcode: das Spiel läuft als statische Seite im Browser (`wasm32-unknown-unknown`).
 4. Neue Crates nur, wenn sie für `wasm32-unknown-unknown` bauen. Danach Web-Build prüfen.
