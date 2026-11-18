@@ -5,5 +5,9 @@ edition = "2021"
 license = "MIT"
 publish = false
 
+[[bin]]
+name = "game_swap_jam_template"
+path = "src/main.rs"
+
 [dependencies]
 macroquad = "0.4"
