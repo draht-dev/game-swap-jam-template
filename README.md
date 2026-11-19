@@ -45,7 +45,7 @@ Die Datei `web/mq_js_bundle.js` ist vendort, passend zu macroquad 0.4.16 und der
 
 ## CI und Pages
 
-- `.github/workflows/ci.yml` (Workflow `gate`): `cargo test`, WASM-Build nach `dist/`, `scripts/gate-check.sh`. Läuft bei jedem Push und PR.
+- `.github/workflows/ci.yml` (Workflow `gate`): `cargo test`, WASM-Build nach `dist/`, `scripts/gate-check.sh`, `scripts/headless-check.sh` (lädt `dist/` in headless Chrome, rot bei `Uncaught`-Konsolenfehler). Läuft bei jedem Push und PR.
 - `.github/workflows/pages.yml` (Workflow `pages`): baut wie das Gate und deployt `dist/` auf GitHub Pages. Im Template nur manuell (`workflow_dispatch`); Pages muss im eigenen public Repo unter Settings > Pages > Source "GitHub Actions" eingeschaltet sein.
 
 ## Dokumente

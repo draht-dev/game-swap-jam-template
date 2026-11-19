@@ -23,3 +23,5 @@ jobs:
         run: bash scripts/build-web.sh
       - name: Gate-Check dist/
         run: bash scripts/gate-check.sh
+      - name: Headless-Gate (keine ungefangenen JS-Fehler)
+        run: bash scripts/headless-check.sh
