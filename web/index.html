@@ -25,10 +25,9 @@
     <script>
         // Nur für das Eingabe-Gate (index.html?gate-input): hält "Pfeil rechts" gedrückt,
         // bis das Spiel "GATE-INPUT ok" loggt, und lässt dann los.
-        // Bewusst an echte Frames (requestAnimationFrame) gekoppelt statt an Timer:
-        // headless Chrome mit --virtual-time-budget lässt Timer schneller laufen als
-        // Frames gerendert werden. Ein fester Timer (früher 1500 ms + 800 ms) konnte
-        // auf langsamen CI-Runnern drücken und loslassen, bevor die Spielschleife lief.
+        // Bewusst an Frames (requestAnimationFrame) gekoppelt statt an feste Timer:
+        // Ein fester Timer (früher 1500 ms + 800 ms) konnte auf langsamen CI-Runnern
+        // drücken und loslassen, bevor die Spielschleife einen Frame gerechnet hatte.
         // Reagiert das Spiel nicht, kommt nie "GATE-INPUT ok" und das Gate bleibt rot.
         if (new URLSearchParams(location.search).has("gate-input")) {
             const canvas = document.getElementById("glcanvas");
@@ -46,6 +45,8 @@
                 // Alle 10 Frames erneut drücken, falls der erste Druck vor dem
                 // Start der Spielschleife (Key-Handler noch nicht gesetzt) kam.
                 if (frames % 10 === 0) key("keydown", frames > 0);
+                // Diagnose für das Gate-Log, falls es rot wird.
+                if (frames > 0 && frames % 120 === 0) console.log("GATE-INPUT wartet, " + frames + " Frames");
                 frames++;
                 requestAnimationFrame(tick);
             };

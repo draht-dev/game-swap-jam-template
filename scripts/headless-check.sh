@@ -10,9 +10,9 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 dist="$root/dist"
 port="${HEADLESS_PORT:-8765}"
 budget_ms="${HEADLESS_BUDGET_MS:-5000}"
-# Eingabe-Check bekommt mehr virtuelle Zeit: auf langsamen CI-Runnern startet die
-# Spielschleife (WASM laden, Ton dekodieren) spät, gemessen an der virtuellen Uhr.
-input_budget_ms="${HEADLESS_INPUT_BUDGET_MS:-15000}"
+# Eingabe-Check läuft in echter Zeit (ohne --virtual-time-budget) und endet, sobald
+# "GATE-INPUT ok" kommt, spätestens nach input_timeout_s Sekunden (dann rot).
+input_timeout_s="${HEADLESS_INPUT_TIMEOUT_S:-30}"
 
 chrome="${CHROME:-$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)}"
 if [ -z "$chrome" ]; then
@@ -24,21 +24,23 @@ python3 -m http.server "$port" --bind 127.0.0.1 --directory "$dist" >/dev/null 2
 srv=$!
 profile="$(mktemp -d)"
 log="$(mktemp)"
-trap 'kill $srv 2>/dev/null || true; rm -rf "$profile" "$log"' EXIT
+cpid=""
+trap 'kill $srv $cpid 2>/dev/null || true; rm -rf "$profile" "$log"' EXIT
 sleep 1
 
 # --enable-logging=stderr schreibt Konsolenmeldungen der Seite als "CONSOLE(...)" nach stderr.
 # SwiftShader liefert WebGL ohne GPU.
-run_chrome() { # $1 = URL-Suffix, $2 = Logdatei, $3 = virtuelles Zeitbudget in ms
-  timeout "${HEADLESS_TIMEOUT_S:-20}" "$chrome" --headless=new --disable-extensions --no-sandbox --disable-gpu-sandbox \
-    --use-angle=swiftshader --enable-unsafe-swiftshader \
-    --user-data-dir="$profile" --enable-logging=stderr --v=0 \
-    --virtual-time-budget="$3" --dump-dom \
+chrome_flags=(--headless=new --disable-extensions --no-sandbox --disable-gpu-sandbox
+  --use-angle=swiftshader --enable-unsafe-swiftshader
+  --user-data-dir="$profile" --enable-logging=stderr --v=0)
+run_chrome() { # $1 = URL-Suffix, $2 = Logdatei
+  timeout "${HEADLESS_TIMEOUT_S:-20}" "$chrome" "${chrome_flags[@]}" \
+    --virtual-time-budget="$budget_ms" --dump-dom \
     "http://127.0.0.1:$port/index.html$1" >/dev/null 2>"$2" || true
 }
 
 # 1) Laden ohne ungefangene JS-Fehler
-run_chrome "" "$log" "$budget_ms"
+run_chrome "" "$log"
 console="$(grep -E 'CONSOLE|Uncaught' "$log" || true)"
 [ -n "$console" ] && echo "$console"
 
@@ -52,8 +54,22 @@ echo "ok    keine ungefangenen JS-Fehler (headless Chrome, ${budget_ms} ms)"
 # 2) Eingabe-Check: index.html?gate-input hält "Pfeil rechts" gedrückt (an Frames
 #    gekoppelt, siehe web/index.html), das Spiel meldet "GATE-INPUT ok", wenn die
 #    Eingabe den Spielzustand verändert (siehe src/main.rs).
+#    Bewusst ohne --virtual-time-budget: auf CI-Runnern läuft die virtuelle Uhr
+#    dort viel schneller als Frames gerendert werden, das Budget war aufgebraucht,
+#    bevor die Spielschleife einen Frame mit gedrückter Taste sah (flaky rot).
+#    Stattdessen echte Zeit, Abbruch sobald die Zeile da ist.
 rm -rf "$profile"; mkdir -p "$profile"
-run_chrome "?gate-input" "$log" "$input_budget_ms"
+: >"$log"
+"$chrome" "${chrome_flags[@]}" "http://127.0.0.1:$port/index.html?gate-input" >/dev/null 2>"$log" &
+cpid=$!
+waited=0
+while [ "$waited" -lt $((input_timeout_s * 2)) ] && kill -0 "$cpid" 2>/dev/null; do
+  grep -q -e 'GATE-INPUT ok' -e 'Uncaught' "$log" && break
+  sleep 0.5
+  waited=$((waited + 1))
+done
+kill "$cpid" 2>/dev/null || true
+wait "$cpid" 2>/dev/null || true
 if grep -q 'Uncaught' "$log"; then
   grep -E 'CONSOLE|Uncaught' "$log" || true
   echo "FEHLER ungefangener JS-Fehler im Eingabe-Check"
@@ -62,9 +78,9 @@ if grep -q 'Uncaught' "$log"; then
 fi
 if ! grep -q 'GATE-INPUT ok' "$log"; then
   grep -E 'CONSOLE' "$log" || true
-  echo "FEHLER Spiel reagiert nicht auf Eingabe (kein \"GATE-INPUT ok\" in der Konsole)"
+  echo "FEHLER Spiel reagiert nicht auf Eingabe (kein \"GATE-INPUT ok\" in der Konsole nach ${input_timeout_s} s)"
   echo "Headless-Gate: ROT"
   exit 1
 fi
-echo "ok    Spiel reagiert auf Eingabe (Pfeil rechts, GATE-INPUT ok, ${input_budget_ms} ms)"
+echo "ok    Spiel reagiert auf Eingabe (Pfeil rechts, GATE-INPUT ok nach ca. $((waited / 2)) s)"
 echo "Headless-Gate: GRÜN"
