@@ -35,6 +35,7 @@ Die Datei `web/mq_js_bundle.js` ist vendort, passend zu macroquad 0.4.16 und der
 - Quelle: Crate `macroquad` 0.4.16, Pfad `js/mq_js_bundle.js` (Upstream: https://github.com/not-fl3/macroquad, Crate bzw. Tag 0.4.16)
 - Herkunft laut `js/README.md` der Crate: Bundling aus miniquad `js/gl.js`, quad-snd `js/audio.js`, sapp-jsutils und quad-net, danach minifiziert
 - Lizenz der Datei und der Crate: MIT OR Apache-2.0
+- Lokaler Patch (eine Stelle, quad-net-Teil am Dateiende): Upstream weist dort `register_plugin=function(e){...}` ohne Deklaration zu. Weil die Datei mit `"use strict"` beginnt, wirft der Browser beim Laden `Uncaught ReferenceError: register_plugin is not defined`, und das Plugin `quad_net` wird nicht registriert. Patch: `function i(){}var register_plugin=function(e){...};miniquad_add_plugin({register_plugin,...})` (`var` davor, `;` statt `,` danach). Prüfen: `node --check web/mq_js_bundle.js`, danach im Browser keine `Uncaught`-Zeile in der Konsole. Bei einem Update der Datei den Patch erneut anwenden.
 
 ## CI und Pages
 
