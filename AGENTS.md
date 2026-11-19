@@ -10,7 +10,7 @@ Hinweise für Coding-Agents (und Menschen), die in diesem Repo arbeiten.
 - `web/index.html`, `web/mq_js_bundle.js`: Web-Hülle. `mq_js_bundle.js` ist vendort (Version und Quelle im README), nicht von Hand ändern.
 - `scripts/build-web.sh`: baut WASM und füllt `dist/`.
 - `scripts/gate-check.sh`: prüft `dist/` (Gate).
-- `scripts/headless-check.sh`: lädt `dist/` in headless Chrome, rot bei ungefangenem JS-Fehler.
+- `scripts/headless-check.sh`: lädt `dist/` in headless Chrome, rot bei ungefangenem JS-Fehler oder wenn das Spiel nicht auf Eingabe reagiert (`index.html?gate-input` drückt "Pfeil rechts", `src/main.rs` meldet `GATE-INPUT ok`, sobald die Eingabe den Zustand anders ändert als ein Frame ohne Eingabe). Den Hook in `src/main.rs` und das Skript in `web/index.html` drin lassen. Wenn euer Spiel nicht auf "Pfeil rechts" reagiert, die Taste dort anpassen.
 - `.github/workflows/ci.yml`: Gate-CI bei jedem Push und PR.
 - `.github/workflows/pages.yml`: Pages-Deploy, im Template nur manuell.
 - `HANDOFF.md`: Übergabe an das nächste Team. `SWAP.md`: Ablauf beim Swap.

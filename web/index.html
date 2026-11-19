@@ -22,5 +22,14 @@
     <!-- Vendored from macroquad 0.4.16, see README.md -->
     <script src="mq_js_bundle.js"></script>
     <script>load("game_swap_jam_template.wasm");</script>
+    <script>
+        // Nur für das Eingabe-Gate (index.html?gate-input): drückt kurz "Pfeil rechts".
+        if (new URLSearchParams(location.search).has("gate-input")) {
+            const canvas = document.getElementById("glcanvas");
+            const key = (type) => canvas.dispatchEvent(
+                new KeyboardEvent(type, { code: "ArrowRight", key: "ArrowRight", bubbles: true }));
+            setTimeout(() => { key("keydown"); setTimeout(() => key("keyup"), 800); }, 1500);
+        }
+    </script>
 </body>
 </html>

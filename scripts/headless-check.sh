@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Headless-Gate: lädt dist/ in headless Chrome und schlägt fehl, wenn die Seite
-# einen ungefangenen JS-Fehler ("Uncaught ...") in die Konsole schreibt.
+# einen ungefangenen JS-Fehler ("Uncaught ...") in die Konsole schreibt oder
+# nicht auf Eingabe reagiert (Eingabe-Check über index.html?gate-input).
 # Aufruf nach scripts/build-web.sh. Exit != 0 = Gate rot.
 # Braucht google-chrome oder chromium (auf ubuntu-latest vorinstalliert) und python3.
 set -euo pipefail
@@ -25,12 +26,16 @@ sleep 1
 
 # --enable-logging=stderr schreibt Konsolenmeldungen der Seite als "CONSOLE(...)" nach stderr.
 # SwiftShader liefert WebGL ohne GPU.
-timeout "${HEADLESS_TIMEOUT_S:-20}" "$chrome" --headless=new --disable-extensions --no-sandbox --disable-gpu-sandbox \
-  --use-angle=swiftshader --enable-unsafe-swiftshader \
-  --user-data-dir="$profile" --enable-logging=stderr --v=0 \
-  --virtual-time-budget="$budget_ms" --dump-dom \
-  "http://127.0.0.1:$port/index.html" >/dev/null 2>"$log" || true
+run_chrome() { # $1 = URL-Suffix, $2 = Logdatei
+  timeout "${HEADLESS_TIMEOUT_S:-20}" "$chrome" --headless=new --disable-extensions --no-sandbox --disable-gpu-sandbox \
+    --use-angle=swiftshader --enable-unsafe-swiftshader \
+    --user-data-dir="$profile" --enable-logging=stderr --v=0 \
+    --virtual-time-budget="$budget_ms" --dump-dom \
+    "http://127.0.0.1:$port/index.html$1" >/dev/null 2>"$2" || true
+}
 
+# 1) Laden ohne ungefangene JS-Fehler
+run_chrome "" "$log"
 console="$(grep -E 'CONSOLE|Uncaught' "$log" || true)"
 [ -n "$console" ] && echo "$console"
 
@@ -40,4 +45,22 @@ if grep -q 'Uncaught' "$log"; then
   exit 1
 fi
 echo "ok    keine ungefangenen JS-Fehler (headless Chrome, ${budget_ms} ms)"
+
+# 2) Eingabe-Check: index.html?gate-input drückt "Pfeil rechts", das Spiel meldet
+#    "GATE-INPUT ok", wenn die Eingabe den Spielzustand verändert (siehe src/main.rs).
+rm -rf "$profile"; mkdir -p "$profile"
+run_chrome "?gate-input" "$log"
+if grep -q 'Uncaught' "$log"; then
+  grep -E 'CONSOLE|Uncaught' "$log" || true
+  echo "FEHLER ungefangener JS-Fehler im Eingabe-Check"
+  echo "Headless-Gate: ROT"
+  exit 1
+fi
+if ! grep -q 'GATE-INPUT ok' "$log"; then
+  grep -E 'CONSOLE' "$log" || true
+  echo "FEHLER Spiel reagiert nicht auf Eingabe (kein \"GATE-INPUT ok\" in der Konsole)"
+  echo "Headless-Gate: ROT"
+  exit 1
+fi
+echo "ok    Spiel reagiert auf Eingabe (Pfeil rechts, GATE-INPUT ok)"
 echo "Headless-Gate: GRÜN"
