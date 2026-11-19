@@ -1,0 +1,8 @@
+# quad-snd 0.2.8 (macroquad-Feature "audio") deklariert seine JS-Importe ohne
+# #[link(wasm_import_module)]. Neuere Rust-Versionen linken undefinierte Symbole
+# auf wasm32-unknown-unknown nicht mehr automatisch als Import aus "env";
+# dieses Flag stellt das alte Verhalten für diesen Target wieder her.
+# Quelle: https://blog.rust-lang.org/2026/04/04/changes-to-webassembly-targets-and-handling-undefined-symbols/
+# (seit Rust 1.96, rust-lang/rust#149868).
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "link-arg=--allow-undefined"]

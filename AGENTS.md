@@ -5,7 +5,8 @@ Hinweise für Coding-Agents (und Menschen), die in diesem Repo arbeiten.
 ## Aufbau
 
 - `src/game.rs`: Spiellogik. Keine Abhängigkeit zu macroquad. Hier gehört neue Logik hin, mit Tests im `#[cfg(test)]`-Modul derselben Datei.
-- `src/main.rs`: Fenster, Eingabe (`read_input`), Zeichnen. Liest Tasten, ruft `State::update` auf und zeichnet den Zustand. Möglichst dünn halten.
+- `src/sfx.rs`: Soundeffekte als im Code erzeugte WAV-Bytes (testbar ohne macroquad).
+- `src/main.rs`: Fenster, Eingabe (`read_input`), Zeichnen, Ton abspielen. Liest Tasten, ruft `State::update` auf und zeichnet den Zustand. Möglichst dünn halten.
 - `web/index.html`, `web/mq_js_bundle.js`: Web-Hülle. `mq_js_bundle.js` ist vendort (Version und Quelle im README), nicht von Hand ändern.
 - `scripts/build-web.sh`: baut WASM und füllt `dist/`.
 - `scripts/gate-check.sh`: prüft `dist/` (Gate).
