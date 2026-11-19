@@ -54,3 +54,4 @@ Die Datei `web/mq_js_bundle.js` ist vendort, passend zu macroquad 0.4.16 und der
 - `HANDOFF.md`: Übergabe-Vorlage für den Swap
 - `SWAP.md`: Swap-Checkliste (Tags `handoff` und `final`, Branch `swap`)
 - `CREDITS.md`: Mitwirkende mit Name und Link
+- `docs/TESTLAUF.md`: Setup- und Build-Zeiten, gemessen mit `scripts/testlauf.sh`
