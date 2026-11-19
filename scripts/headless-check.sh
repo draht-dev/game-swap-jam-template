@@ -25,7 +25,7 @@ srv=$!
 profile="$(mktemp -d)"
 log="$(mktemp)"
 cpid=""
-trap 'kill $srv $cpid 2>/dev/null || true; rm -rf "$profile" "$log"' EXIT
+trap 'kill $srv $cpid 2>/dev/null || true; sleep 1; rm -rf "$profile" "$log" 2>/dev/null || true' EXIT
 sleep 1
 
 # --enable-logging=stderr schreibt Konsolenmeldungen der Seite als "CONSOLE(...)" nach stderr.
