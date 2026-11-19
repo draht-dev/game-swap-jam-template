@@ -41,9 +41,29 @@ async fn main() {
     // Ton beim Einsammeln. Im Browser erst nach der ersten Eingabe hörbar (Autoplay-Regel).
     let pickup = load_sound_from_bytes(&sfx::beep_wav(880.0, 0.12, 0.3)).await.ok();
 
+    // Eingabe-Gate: meldet einmal "GATE-INPUT ok" in der Konsole, sobald eine Eingabe
+    // den Spielzustand anders verändert als ein Frame ohne Eingabe.
+    // scripts/headless-check.sh prüft genau diese Zeile. Bitte drin lassen.
+    let mut input_seen = false;
+
     loop {
         let score_before = state.score;
-        state.update(read_input(), get_frame_time());
+        let input = read_input();
+        let dt = get_frame_time();
+        let idle = if !input_seen && input != Input::default() {
+            let mut idle = state.clone();
+            idle.update(Input::default(), dt);
+            Some(idle)
+        } else {
+            None
+        };
+        state.update(input, dt);
+        if let Some(idle) = idle {
+            if idle != state {
+                input_seen = true;
+                info!("GATE-INPUT ok");
+            }
+        }
         if state.score > score_before {
             if let Some(sound) = &pickup {
                 play_sound_once(sound);

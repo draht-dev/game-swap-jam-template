@@ -22,5 +22,36 @@
     <!-- Vendored from macroquad 0.4.16, see README.md -->
     <script src="mq_js_bundle.js"></script>
     <script>load("game_swap_jam_template.wasm");</script>
+    <script>
+        // Nur für das Eingabe-Gate (index.html?gate-input): hält "Pfeil rechts" gedrückt,
+        // bis das Spiel "GATE-INPUT ok" loggt, und lässt dann los.
+        // Bewusst an Frames (requestAnimationFrame) gekoppelt statt an feste Timer:
+        // Ein fester Timer (früher 1500 ms + 800 ms) konnte auf langsamen CI-Runnern
+        // drücken und loslassen, bevor die Spielschleife einen Frame gerechnet hatte.
+        // Reagiert das Spiel nicht, kommt nie "GATE-INPUT ok" und das Gate bleibt rot.
+        if (new URLSearchParams(location.search).has("gate-input")) {
+            const canvas = document.getElementById("glcanvas");
+            const key = (type, repeat) => canvas.dispatchEvent(new KeyboardEvent(type,
+                { code: "ArrowRight", key: "ArrowRight", bubbles: true, repeat }));
+            let ok = false;
+            const log = console.log;
+            console.log = function (...args) {
+                if (String(args[0]).includes("GATE-INPUT ok")) ok = true;
+                return log.apply(this, args);
+            };
+            let frames = 0;
+            const tick = () => {
+                if (ok) { key("keyup", false); return; }
+                // Alle 10 Frames erneut drücken, falls der erste Druck vor dem
+                // Start der Spielschleife (Key-Handler noch nicht gesetzt) kam.
+                if (frames % 10 === 0) key("keydown", frames > 0);
+                // Diagnose für das Gate-Log, falls es rot wird.
+                if (frames > 0 && frames % 120 === 0) console.log("GATE-INPUT wartet, " + frames + " Frames");
+                frames++;
+                requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+        }
+    </script>
 </body>
 </html>
