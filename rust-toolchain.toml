@@ -1,0 +1,6 @@
+# Damit `cargo` auf jedem Rechner mit rustup sofort die passende Toolchain
+# samt wasm32-Target holt, auch ohne `rustup default stable`.
+[toolchain]
+channel = "stable"
+targets = ["wasm32-unknown-unknown"]
+profile = "minimal"
