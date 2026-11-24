@@ -26,11 +26,13 @@ step() {
 }
 
 echo "Testlauf $(date '+%Y-%m-%d %H:%M %Z'), Quelle: $src, Arbeitsordner: $work"
-echo "rustc: $(rustc --version), cargo: $(cargo --version)"
 echo "CPU: $(nproc) Kerne, $(uname -sm)"
 
 step "git clone"                            git clone -q "$src" "$work/repo"
 cd "$work/repo"
+# rust-toolchain.toml im Repo: rustup holt Toolchain und wasm32-Target bei Bedarf selbst.
+step "Toolchain aus rust-toolchain.toml"    rustup show active-toolchain
+echo "rustc: $(rustc --version), cargo: $(cargo --version)"
 step "rustup target add wasm32 (falls fehlt)" rustup target add wasm32-unknown-unknown
 step "cargo fetch (kalter Crate-Cache)"     cargo fetch
 step "cargo test (kalt)"                     cargo test
